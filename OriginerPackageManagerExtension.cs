@@ -11,6 +11,9 @@ namespace Originer
 {
     public class OriginerExtension
     {
+        private const float PHASES = 2f;
+        private const string PROGRESS_TITLE = "Originer | Resolve packages";
+        
         [InitializeOnLoadMethod]
         public static void Init()
         {
@@ -20,37 +23,55 @@ namespace Originer
         [MenuItem("Edit/Originer/Fix missing packages")]
         private static void EditorApplicationOnProjectChanged()
         {
-            var installedPackages = CollectInstalledPackages();
-            
-            var missingPackages = MissingPackages(installedPackages);
-            if (missingPackages.Count == 0)
+            try
             {
-                return;
-            }
+                var installedPackages = CollectInstalledPackages();
+                var missingPackages = MissingPackages(installedPackages);
+                if (missingPackages.Count == 0)
+                {
+                    return;
+                }
+                
+                EditorUtility.DisplayProgressBar(PROGRESS_TITLE, "Find github missing packages", 0f / PHASES);
+                
+                var foundOnGithub = GetMisingManifestDeps(missingPackages);
+                if (foundOnGithub.Count == 0)
+                {
+                    EditorUtility.ClearProgressBar();
+                    return;
+                }
+                
+                EditorUtility.DisplayProgressBar(PROGRESS_TITLE, "Prepare for changes", 1f / PHASES);
 
-            var foundOnGithub = GetMisingManifestDeps(missingPackages);
-            if (foundOnGithub.Count == 0)
-            {
-                return;
-            }
-            
-            var manifest = File.ReadAllText("./Packages/manifest.json").JsonSerialize<ManifestOrPackageInfo>();
-            foreach (var missingPackage in foundOnGithub)
-            {
-                manifest.dependencies.Add(missingPackage.Key, missingPackage.Value);
-            }
+                var manifest = File.ReadAllText("./Packages/manifest.json").JsonSerialize<ManifestOrPackageInfo>();
+                foreach (var missingPackage in foundOnGithub)
+                {
+                    manifest.dependencies.Add(missingPackage.Key, missingPackage.Value);
+                }
 
-            if (manifest.scopedRegistries == null)
-            {
-                manifest.scopedRegistries = new ManifestOrPackageInfo.ScopedRegistryEntry[0];
-            }
+                if (manifest.scopedRegistries == null)
+                {
+                    manifest.scopedRegistries = new ManifestOrPackageInfo.ScopedRegistryEntry[0];
+                }
 
-            LogSummary(foundOnGithub, missingPackages);
-            var canMakeChanges = AskCanMakeChanges(foundOnGithub, missingPackages);
-            if (canMakeChanges)
+                LogSummary(foundOnGithub, missingPackages);
+                var canMakeChanges = AskCanMakeChanges(foundOnGithub, missingPackages);
+                
+                EditorUtility.DisplayProgressBar(PROGRESS_TITLE, "Make changes", 2f / PHASES);
+                
+                if (canMakeChanges)
+                {
+                    File.WriteAllText("./Packages/manifest.json", manifest.JsonDeserialize());
+                    AssetDatabase.Refresh();
+                }
+            }
+            catch (Exception e)
             {
-                File.WriteAllText("./Packages/manifest.json", manifest.JsonDeserialize());
-                AssetDatabase.Refresh();
+                Debug.LogException(e);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
             }
         }
 
@@ -65,7 +86,7 @@ namespace Originer
             var notFounds = missingPackages.ToList().Where(p => !foundOnGithub.ContainsKey(p.Key)).ToList();
             if (notFounds.Count > 0)
             {
-                resultInfo += "\nNot found at Github:\n";
+                resultInfo += "\nNot found at Github:\n\n";
             }
             foreach (var notFound in notFounds)
             {
@@ -91,7 +112,7 @@ namespace Originer
             var notFounds = missingPackages.ToList().Where(p => !foundOnGithub.ContainsKey(p.Key)).ToList();
             foreach (var notFound in notFounds)
             {
-                resultInfo += "<color=red> ! not found package `" + notFound.Key + "` with version: " + notFound.Value +
+                resultInfo += "<color=red> ! not found package `" + notFound.Key + "` version: " + notFound.Value +
                               "</color>\n";
             }
 
@@ -111,7 +132,7 @@ namespace Originer
         {
             return Directory.GetDirectories("./Library/PackageCache")
                 .Select(Path.GetFileName)
-                .Union(Directory.GetDirectories("./Packages"))
+                .Union(Directory.GetDirectories("./Packages").Select(Path.GetFileName).ToArray())
                 .ToArray();
         }
         
@@ -124,7 +145,9 @@ namespace Originer
                 foreach (var dependency in dependencies)
                 {
                     var depName = dependency.Key;
-                    if (installedPackages.Any(s => s.Substring(0, s.Contains("@") ? s.IndexOf("@") : s.Length) == depName) ||
+                    if (installedPackages.Any(s =>
+                            s.Substring(0, s.Contains("@") ? s.IndexOf("@") : s.Length).ToLower() ==
+                            depName.ToLower()) ||
                         depName.StartsWith("com.unity."))
                     {
                         continue;
@@ -146,7 +169,7 @@ namespace Originer
 
         private static Dictionary<string, string> GetPackageDependencies(string package)
         {
-            var packagesDir = package.Contains('@') ? "./Library/PackageCache/" : "./";
+            var packagesDir = package.Contains('@') ? "./Library/PackageCache/" : "./Packages/";
             
             var manifest = File.ReadAllText(packagesDir + package + "/package.json")
                 .JsonSerialize<ManifestOrPackageInfo>();
@@ -162,19 +185,25 @@ namespace Originer
         private static Dictionary<string, string> GetMisingManifestDeps(Dictionary<string, Version> missingPackages)
         {
             var matchGithub = missingPackages
-                .Select(p => new KeyValuePair<string, string>(p.Key, RequestGithubRepositiory(p.Key, p.Value)))
+                .Select((p, i) =>
+                    new KeyValuePair<string, string>(p.Key,
+                        RequestGithubRepositiory(p.Key, p.Value, i, missingPackages.Count)))
                 .Where(p => !string.IsNullOrEmpty(p.Value))
                 .ToDictionary(p => p.Key, p => p.Value);
 
             return matchGithub;
         }
 
-        private static string RequestGithubRepositiory(string packageName, Version version)
+        private static string RequestGithubRepositiory(string packageName, Version version, int itemIndex, int maxCount)
         {
             var url = "https://api.github.com/search/repositories?q=" + packageName +
                       "+fork:true+topic:upm-package";
-            var response = Request(url);
+
+            EditorUtility.DisplayProgressBar(PROGRESS_TITLE, "Find package: " + packageName + "#" + version,
+                (itemIndex / (float) maxCount) / PHASES);
             
+            var response = Request(url);
+
             GithubResponse data = null;
             try
             {
