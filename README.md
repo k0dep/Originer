@@ -24,16 +24,17 @@ This feature is described in [the UPM dedicated UPM forum.](https://forum.unity.
 
 But if the `BuindingRx` package will have dependencies on the packages not added to `manifest.json` inside it, this will result in Unity not resolving this dependency.  
 
-This problem can be solved with the help of scoped registries. This feature is described in [this thread.](https://forum.unity.com/threads/setup-for-scoped-registries-private-registries.573934/#post-3819754).  
+This problem can be solved with the help of scoped registries. This feature is described in [this thread.](https://forum.unity.com/threads/setup-for-scoped-registries-private-registries.573934/#post-3819754)  
 
-But this method requires certain package naming (the package must have a certain prefix, for example `com.unity.*`) And deploy its own solution for storing and distributing npm packages, for example [Verdaccio](https://github.com/verdaccio/verdaccio), which is not a convenient solution for small and / or open source projects.  
+But this method requires certain package naming (the package must have a certain prefix, for example `com.unity.*`) And deploy its own solution for storing and distributing npm packages, for example [Verdaccio](https://github.com/verdaccio/verdaccio), which is not a convenient solution for small and/or open source projects.  
 
-This package solve this issue. If the project has the `Originer` package in dependencies, then after starting the unity, the package will try to find unresolved dependencies in the installed projects, try to find them in Github according to certain rules described below and install them in `manifest.json`.
+This package solve this issue. If the project has the `Originer` package in dependencies, then after starting the unity, the package will try to find unresolved dependencies in the installed projects, try to find them in Github according to certain rules described below and install them in `manifest.json`
 
 Repository requirements
 -----------------------
 
-In order for `Originer` to be able to find your repository in github as a dependency and successfully include it in the proget, you need to add a repository with a __topic__ named `upm-package`
+* In order for `Originer` to be able to find your repository in github as a dependency and successfully include it in the proget, you need to add a repository with a __topic__ named `upm-package`
+* The repository should be named the same as the package name.
 
 Еxamples of repositories as packages:
 * [BindingRx](https://github.com/k0dep/BindingRx)
