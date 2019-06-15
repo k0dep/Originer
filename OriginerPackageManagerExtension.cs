@@ -46,7 +46,7 @@ namespace Originer
                 var manifest = File.ReadAllText("./Packages/manifest.json").JsonSerialize<ManifestOrPackageInfo>();
                 foreach (var missingPackage in foundOnGithub)
                 {
-                    manifest.dependencies.Add(missingPackage.Key, missingPackage.Value);
+                    manifest.dependencies[missingPackage.Key] = missingPackage.Value;
                 }
 
                 if (manifest.scopedRegistries == null)
@@ -75,7 +75,7 @@ namespace Originer
             }
         }
 
-        private static bool AskCanMakeChanges(Dictionary<string, string> foundOnGithub, Dictionary<string, Version> missingPackages)
+        private static bool AskCanMakeChanges(Dictionary<string, string> foundOnGithub, Dictionary<string, string> missingPackages)
         {
             var resultInfo = "Will added packages:\n\n";
             foreach (var ghEntry in foundOnGithub)
@@ -100,7 +100,7 @@ namespace Originer
             return canMakeChanges;
         }
 
-        private static string LogSummary(Dictionary<string, string> foundOnGithub, Dictionary<string, Version> missingPackages)
+        private static string LogSummary(Dictionary<string, string> foundOnGithub, Dictionary<string, string> missingPackages)
         {
             var resultInfo = "<color=blue>[Originer]</color> Found missing packages from github.\n";
             foreach (var ghEntry in foundOnGithub)
@@ -136,9 +136,9 @@ namespace Originer
                 .ToArray();
         }
         
-        private static Dictionary<string, Version> MissingPackages(string[] installedPackages)
+        private static Dictionary<string, string> MissingPackages(string[] installedPackages)
         {
-            var missings = new Dictionary<string, Version>();
+            var missings = new Dictionary<string, string>();
             foreach (var package in installedPackages)
             {
                 var dependencies = GetPackageDependencies(package);
@@ -153,14 +153,7 @@ namespace Originer
                         continue;
                     }
 
-                    if (!Version.TryParse(dependency.Value, out var version))
-                    {
-                        Debug.LogWarning(
-                            "<color=blue>[Originer]</color> Cant parse version from package dependency.\npackage: " +
-                            package + "\ndependency: " + depName + "\ndependency version: " + dependency.Value);
-                        version = new Version(0, 0, 0);
-                    }
-                    missings[dependency.Key] = version;
+                    missings[dependency.Key] = dependency.Value;
                 }
             }
 
@@ -182,19 +175,59 @@ namespace Originer
             return manifest.dependencies;
         }
         
-        private static Dictionary<string, string> GetMisingManifestDeps(Dictionary<string, Version> missingPackages)
+        private static Dictionary<string, string> GetMisingManifestDeps(Dictionary<string, string> missingPackages)
         {
             var matchGithub = missingPackages
                 .Select((p, i) =>
                     new KeyValuePair<string, string>(p.Key,
-                        RequestGithubRepositiory(p.Key, p.Value, i, missingPackages.Count)))
+                        RequestRepositiory(p.Key, p.Value, i, missingPackages.Count)))
                 .Where(p => !string.IsNullOrEmpty(p.Value))
                 .ToDictionary(p => p.Key, p => p.Value);
 
             return matchGithub;
         }
 
-        private static string RequestGithubRepositiory(string packageName, Version version, int itemIndex, int maxCount)
+        private static string RequestRepositiory(string packageName, string version, int itemIndex, int maxCount)
+        {
+            return RequestWhiteUnity(packageName, version, itemIndex, maxCount)
+                   ?? RequestGithub(packageName, version, itemIndex, maxCount);
+        }
+
+        private static string RequestWhiteUnity(string packageName, string version, int itemIndex, int maxCount)
+        {
+            var url = "https://api.originer.parabox.tech/api/match/" + packageName;
+
+            EditorUtility.DisplayProgressBar(PROGRESS_TITLE, "Find package: " + packageName + "#" + version,
+                (itemIndex / (float) maxCount) / PHASES);
+            
+            var response = Request(url);
+
+            PackageInfoDto data = null;
+            try
+            {
+                data = response.JsonSerialize<PackageInfoDto>();
+            }
+            catch
+            {
+                Debug.LogError("Cant parse Originer json search response\nurl: " + url + "data:\n" + response);
+                return null;
+            }
+
+            if (data == null)
+            {
+                Debug.LogError("Unknown serialization error. Code: 1");
+                return null;
+            }
+
+            if (!data.versions.Contains(version))
+            {
+                return data.urlForManifest;
+            }
+
+            return data.urlForManifest + "#" + version;
+        }
+
+        private static string RequestGithub(string packageName, string version, int itemIndex, int maxCount)
         {
             var url = "https://api.github.com/search/repositories?q=" + packageName +
                       "+fork:true+topic:upm-package";
@@ -238,7 +271,7 @@ namespace Originer
             return relevantRepo.clone_url + "#" + version;
         }
 
-        private static bool IsTagExist(GithubResponse.RepositoryInfoItem repo, Version version)
+        private static bool IsTagExist(GithubResponse.RepositoryInfoItem repo, string version)
         {
             var url = "https://api.github.com/repos/" + repo.owner.login + "/" + repo.name + "/tags";
 
@@ -255,7 +288,7 @@ namespace Originer
                 return false;
             }
 
-            return tags.Any(t => t.name == version.ToString());
+            return tags.Any(t => t.name == version);
         }
 
         private static string Request(string url, bool logHttpError = false)
