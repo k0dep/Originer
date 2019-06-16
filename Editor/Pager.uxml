@@ -1,0 +1,18 @@
+<UXML xmlns="UnityEngine.Experimental.UIElements">
+    <VisualElement class="pager">
+        <VisualElement name="prevPage" class="flatButton border-right align-center">
+            <Label text="&lt;"/>
+        </VisualElement>
+
+        <VisualElement class="flex-row">
+            <Label text="page"/>
+            <Label name="currentPage" text="..."/>
+            <Label text="of"/>
+            <Label name="maxPage" text="..."/>
+        </VisualElement>
+
+        <VisualElement name="nextPage" class="flatButton border-left align-center">
+            <Label text="&gt;"/>
+        </VisualElement>
+    </VisualElement>
+</UXML>

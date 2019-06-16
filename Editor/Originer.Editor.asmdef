@@ -1,0 +1,17 @@
+{
+    "name": "Originer.Editor",
+    "references": [
+        "GUID:a7072912caac232a684608bc94fedf21"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

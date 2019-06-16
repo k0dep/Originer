@@ -1,0 +1,26 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <uie:Template path="Packages/Originer/Editor/Pager.uxml" name="Pager"/>
+
+    <VisualElement class="container">
+
+        <uie:Toolbar class="toolbar">
+            <uie:ToolbarSpacer />
+            <uie:ToolbarButton name="searchButton" text="Search" />
+            <uie:ToolbarPopupSearchField />
+        </uie:Toolbar>
+
+        <VisualElement class="mainLayout">
+            <ScrollView class="border-right">
+                <Instance template="Pager" name="pagerTop"/>
+
+                <VisualElement name="packageList">
+                    <Label text="Loading"/>
+                </VisualElement>
+            </ScrollView>
+
+            <VisualElement name="packageInfo">
+                <Label text="Select package" />
+            </VisualElement>
+        </VisualElement>
+    </VisualElement>
+</UXML>

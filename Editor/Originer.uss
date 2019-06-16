@@ -1,0 +1,98 @@
+.container {
+    -unity-position: absolute;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.mainLayout {
+    flex-direction: row;
+    flex-grow: 1;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.toolbar {
+    justify-content: flex-end;
+}
+
+#packageList {
+}
+
+#packageInfo {
+    flex-grow: 1;
+    padding-right: 10px;
+}
+
+.item {
+    height: 29px;
+    width: 300px;
+    border-bottom-width: 1px;
+    border-color: #555;
+    flex-direction: row;
+    align-items: center;
+    padding-left: 5px;
+}
+
+.item:hover {
+    background-color: #aaa;
+}
+
+.item:focus {
+    background-color: #999;
+}
+
+.item > Label {
+    font-size: 13;
+}
+
+.border-left {
+    border-left-width: 1px;
+    border-color: #555;
+}
+
+.border-right {
+    border-right-width: 1px;
+    border-color: #555;
+}
+
+.flatButton {
+    width: 20;
+    height: 20;
+}
+
+.flatButton:hover {
+    background-color: #aaa;
+}
+
+.pager {
+    justify-content: space-between;
+    flex-direction: row;
+    border-bottom-width: 1px;
+    border-color: #555;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.bold {
+    font-style: bold;
+}
+
+.header {
+    font-size: 15;
+}
+
+.packageInfoContainer {
+    padding-left: 15px;
+    padding-top: 10px;
+}
+
+.m-t-5 {
+    margin-top: 5px;
+}
