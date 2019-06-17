@@ -20,7 +20,7 @@ namespace Originer
             EditorApplication.projectChanged += EditorApplicationOnProjectChanged;
         }
 
-        [MenuItem("Edit/Originer/Fix missing packages")]
+        [MenuItem("Window/Originer/Check and fix")]
         private static void EditorApplicationOnProjectChanged()
         {
             try
@@ -73,6 +73,20 @@ namespace Originer
             {
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        public static void Install(string packageName, string version)
+        {
+            var manifest = File.ReadAllText("./Packages/manifest.json").JsonSerialize<ManifestOrPackageInfo>();
+            manifest.dependencies[packageName] = version;
+
+            if (manifest.scopedRegistries == null)
+            {
+                manifest.scopedRegistries = new ManifestOrPackageInfo.ScopedRegistryEntry[0];
+            }
+
+            File.WriteAllText("./Packages/manifest.json", manifest.JsonDeserialize());
+            AssetDatabase.Refresh();
         }
 
         private static bool AskCanMakeChanges(Dictionary<string, string> foundOnGithub, Dictionary<string, string> missingPackages)

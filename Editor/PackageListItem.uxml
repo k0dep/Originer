@@ -1,0 +1,5 @@
+<UXML xmlns="UnityEngine.Experimental.UIElements">
+    <VisualElement class="item" focusable="true">
+        <Label name="itemFullName" text="Lorem ipsum"/>
+    </VisualElement>
+</UXML>

@@ -9,36 +9,36 @@ namespace Originer
     public class PackageInfoDto
     {
         [DataMember]
-        public int id { get; set; }
+        public int id;
 
         [DataMember]
-        public string name { get; set; }
+        public string name;
 
         [DataMember]
-        public string projectUrl { get; set; }
+        public string projectUrl;
 
         [DataMember]
-        public string urlForManifest { get; set; }
+        public string urlForManifest;
         
         [DataMember]
-        public string displayName { get; set; }
+        public string displayName;
 
         [DataMember]
-        public string description { get; set; }
+        public string description;
         
         [DataMember]
-        public string version { get; set; }
+        public string version;
 
         [DataMember]
-        public string[] dependencies { get; set; }
+        public string[] dependencies;
 
         [DataMember]
-        public string category { get; set; }
+        public string category;
 
         [DataMember]
-        public string unity { get; set; }
+        public string unity;
 
         [DataMember]
-        public string[] versions { get; set; }
+        public string[] versions;
     }
 }

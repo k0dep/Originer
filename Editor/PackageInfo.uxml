@@ -1,0 +1,21 @@
+<UXML xmlns="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ScrollView class="packageInfoContainer">
+        <Label class="header" name="package-displayName" text="Select a package" />
+        <VisualElement class="flex-row">
+            <Label text="@" />
+            <Label name="package-name" text="Select a package" />
+        </VisualElement>
+        <VisualElement class="flex-row">
+            <Label text="Last version:" />
+            <Label name="package-lastVersion" text="Select a package" />
+        </VisualElement>
+
+        <Button name="installMain" text="Install" />
+
+        <Label class="bold m-t-5" text="Description:" />
+        <TextElement name="package-desc" text="Select a package" />
+
+        <Label class="bold m-t-5" text="Project url:" />
+        <TextElement name="package-url" text="Select a package" />
+    </ScrollView>
+</UXML>
