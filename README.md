@@ -20,6 +20,7 @@ It looks like this:
 }
 ```
 
+
 This feature is described in [the UPM dedicated UPM forum.](https://forum.unity.com/threads/git-support-on-package-manager.573673/)  
 
 But if the `BuindingRx` package will have dependencies on the packages not added to `manifest.json` inside it, this will result in Unity not resolving this dependency.  
