@@ -1,6 +1,6 @@
 {
   "name": "originer",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "displayName": "Originer",
   "author": "Stanislav Petrov @k0dep <sv.petrov@kodep.pro>",
   "description": "The package for Unity3d after the addition of which makes it possible to automatically resolve and enable the \"Unity package manager\" system dependencies on projects located on Github."
